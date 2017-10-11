@@ -1,33 +1,27 @@
 pragma solidity ^0.4.2;
 
-contract owned 
-{
+contract owned {
 	address public owner;
 
-	function owned() 
-	{
+	function owned() {
 		owner = msg.sender;
 	}
 
-	modifier onlyOwner 
-	{
+	modifier onlyOwner {
 		require(msg.sender == owner);
 		_;
 	}
 
-	function transferOwnership(address newOwner) onlyOwner 
-	{
+	function transferOwnership(address newOwner) onlyOwner {
 		owner = newOwner;
 	}
 }
 
-contract tokenRecipient 
-{ 
+contract tokenRecipient { 
 	function receiveApproval(address _from, uint256 _value, address _token, bytes _extraData); 
 }
 
-library MathFunction 
-{
+library MathFunction {
     // standard uint256 functions
 
     function plus(uint256 x, uint256 y) constant internal returns (uint256 z) {
@@ -91,8 +85,7 @@ library MathFunction
     }
 }
 
-contract ERC20 
-{
+contract ERC20 {
     function totalSupply() constant returns (uint _totalSupply);
     function balanceOf(address _owner) constant returns (uint balance);
     function transfer(address _to, uint _value) returns (bool success);
@@ -103,8 +96,7 @@ contract ERC20
     event Approval(address indexed _owner, address indexed _spender, uint _value);
 }
 
-contract token is owned, ERC20
-{
+contract token is owned, ERC20 {
 	using MathFunction for uint256;
 	
 	// Public variables
@@ -117,15 +109,13 @@ contract token is owned, ERC20
 	mapping (address => uint256) public balanceOf;													// This creates an array with all balances
 	mapping (address => mapping (address => uint256)) public allowance;								// Creates an array with allowed amount of tokens for sender
 	
-	modifier onlyContributer
-	{
+	modifier onlyContributer {
 		require(balanceOf[msg.sender] > 0);
 		_;
 	}
 	
 	// Initializes contract with name, symbol, decimal and total supply
-	function token() 
-	{		
+	function token() {		
 		totalSupply = 166000;  																		// Update total supply
 		totalSupply = totalSupply.multiply(10 ** 18);
 		balanceOf[msg.sender] = totalSupply;              											// Give the creator all initial tokens
@@ -134,18 +124,15 @@ contract token is owned, ERC20
 		decimals = 18;                            													// Amount of decimals for display purposes
 	}
 	
-	function balanceOf(address _owner) constant returns (uint256 balance) 
-	{
+	function balanceOf(address _owner) constant returns (uint256 balance) {
 		return balanceOf[_owner];																	// Get the balance
 	}
 	
-	function totalSupply() constant returns (uint256 _totalSupply)
-	{
+	function totalSupply() constant returns (uint256 _totalSupply) {
 	    return totalSupply;
 	}
   
-	function transfer(address _to, uint256 _value) returns (bool success) 
-	{
+	function transfer(address _to, uint256 _value) returns (bool success) {
 		require(balanceOf[msg.sender] >= _value);													// Check if the sender has enough    
 		require(balanceOf[_to] <= balanceOf[_to].plus(_value));										// Check for overflows
 								
@@ -157,8 +144,7 @@ contract token is owned, ERC20
 	}
 	
 	// A contract attempts to get the coins
-	function transferFrom(address _from, address _to, uint256 _value) returns (bool success)			
-	{
+	function transferFrom(address _from, address _to, uint256 _value) returns (bool success) {
 		require(_value <= balanceOf[_from]);														// Check if the sender has enough
 		require(balanceOf[_to] <= balanceOf[_to].plus(_value));										// Check for overflows
 		require(_value <= allowance[_from][msg.sender]);											// Check allowance
@@ -172,8 +158,7 @@ contract token is owned, ERC20
 	}
 
 	// Allow another contract to spend some tokens in your behalf 
-	function approve(address _spender, uint256 _value)	returns (bool success) 						
-	{
+	function approve(address _spender, uint256 _value)	returns (bool success) {
 		require((_value == 0) || (allowance[msg.sender][_spender] == 0));
 		
 		allowance[msg.sender][_spender] = _value;
@@ -182,30 +167,26 @@ contract token is owned, ERC20
 	}
 	
 	// Approve and then communicate the approved contract in a single tx
-	function approveAndCall(address _spender, uint256 _value, bytes _extraData) returns (bool success) 
-	{    
+	function approveAndCall(address _spender, uint256 _value, bytes _extraData) returns (bool success) {    
 		tokenRecipient spender = tokenRecipient(_spender);
-		if (approve(_spender, _value)) 
-		{
+		if (approve(_spender, _value)) {
 			spender.receiveApproval(msg.sender, _value, this, _extraData);
 			return true;
 		}
 	}	
 	
 	// Function to check the amount of tokens that an owner allowed to a spender
-	function allowance(address _owner, address _spender) constant returns (uint256 remaining) 
-	{
+	function allowance(address _owner, address _spender) constant returns (uint256 remaining) {
 		return allowance[_owner][_spender];
 	}
 }
 
-contract ICOToken is token
-{
+contract ICOToken is token {
 	// Public variables
-	string public firstLevelPrice = "Token 0.0100 ETH per Token";
-	string public secondLevelPrice = "Token 0.0125 ETH per Token";
-	string public thirdLevelPrice = "Token 0.0166 ETH per Token";
-	string public CapLevelPrice = "Token 0.0250 ETH per Token";
+	string public constant firstLevelPrice = "Token 0.0100 ETH per Token";
+	string public constant secondLevelPrice = "Token 0.0125 ETH per Token";
+	string public constant thirdLevelPrice = "Token 0.0166 ETH per Token";
+	string public constant CapLevelPrice = "Token 0.0250 ETH per Token";
 	uint256 public _firstLevelEth;
 	uint256 public _secondLevelEth;
 	uint256 public _thirdLevelEth;
@@ -239,16 +220,13 @@ contract ICOToken is token
 
 	event GoalReached(address _beneficiary, uint amountRaised);
 	
-	modifier afterDeadline() 
-	{
+	modifier afterDeadline() {
 		require(crowdsaleClosed);
 		_;
 	}
 	 
 	// Initializes contract 
-	
-	function ICOToken() token() 
-	{          
+	function ICOToken() token() {          
 		balanceOf[msg.sender] = totalSupply;              											// Give the creator all initial tokens
 		
 		beneficiary = owner;
@@ -279,24 +257,18 @@ contract ICOToken is token
 	// Changes the level price when the current one is reached
 	// Makes the current to be next 
 	// And next to be the following one
-	function levelChanger() internal						
-	{
-		if(_nextLevelPrice == _secondLevelPrice)
-		{
+	function levelChanger() internal {
+		if(_nextLevelPrice == _secondLevelPrice) {
 			_currentLevelEth = _secondLevelEth;
 			_currentLevelPrice = _secondLevelPrice;
 			_nextLevelEth = _thirdLevelEth;
 			_nextLevelPrice = _thirdLevelPrice;
-		}
-		else if(_nextLevelPrice == _thirdLevelPrice)
-		{
+		} else if(_nextLevelPrice == _thirdLevelPrice) {
 			_currentLevelEth = _thirdLevelEth;
 			_currentLevelPrice = _thirdLevelPrice;
 			_nextLevelEth = _capLevelEth;
 			_nextLevelPrice = _capLevelPrice;
-		}
-		else
-		{
+		} else {
 			_currentLevelEth = _capLevelEth;
 			_currentLevelPrice = _capLevelPrice;
 			_nextLevelEth = _capLevelEth;
@@ -305,14 +277,12 @@ contract ICOToken is token
 	}
 	
 	// Check if the tokens amount is bigger than total supply
-	function safeCheck (uint256 _TokensAmount) internal
-	{
+	function safeCheck (uint256 _TokensAmount) internal	{
 		require(_TokensAmount <= totalSupply);
 	}
 	
 	// Calculates the tokens amount
-	function tokensAmount() internal returns (uint256 _tokensAmount) 			
-	{   
+	function tokensAmount() internal returns (uint256 _tokensAmount) {   
 		amountRaisedEth = amountRaisedEth.wplus(amount);
 		uint256 raisedForNextLevel = amountRaisedEth.wminus(_currentLevelEth);
 		remainig = amount.minus(raisedForNextLevel);
@@ -323,27 +293,22 @@ contract ICOToken is token
 		return TokensAmount;
 	}
 	
-	function manualBuyPrice (uint256 _NewPrice) onlyOwner
-	{
+	function manualBuyPrice (uint256 _NewPrice) onlyOwner {
 		_currentLevelPrice = _NewPrice;
 		buyPrice = _currentLevelPrice;
 	}
 	
 	// The function without name is the default function that is called whenever anyone sends funds to a contract
-	function buyTokens () payable         								
-	{
+	function buyTokens () payable {
 		assert(!crowdsaleClosed);																	// Checks if the crowdsale is closed
 	
 		amount = msg.value;																			// Amount in ether
 		assert(amountRaisedEth.plus(amount) <= _nextLevelEth);										// Check if you are going to jump over one level (e.g. from first to third - not allowed)					
 								
-		if(amountRaisedEth.plus(amount) > _currentLevelEth)											
-		{								
+		if(amountRaisedEth.plus(amount) > _currentLevelEth)	{								
 			TokensAmount = tokensAmount();															// The current level is passed and calculate new buy price and change level
 			safeCheck(TokensAmount);						
-		}						
-		else						
-		{						
+		} else {						
 			buyPrice = _currentLevelPrice;															// Use the current level buy price
 			TokensAmount = amount.wdivide(buyPrice);
 			safeCheck(TokensAmount);						
@@ -356,19 +321,19 @@ contract ICOToken is token
 		balanceOf[msg.sender] = balanceOf[msg.sender].plus(TokensAmount);                   		// Adds tokens amount to buyer's balance
 		Transfer(this, msg.sender, TokensAmount);                									// Execute an event reflecting the change					
 		return;                                     	            								// Ends function and returns
-	}						
-	function () payable   
-	{
+	}
+	
+	function () payable {
 		buyTokens();
 	}
+	
 	// Checks if the goal or time limit has been reached and ends the campaign 
-	function CloseCrowdSale(uint256 _maximumBuyBackAmountInCents) internal 								
-	{
-		if (amountRaisedEth >= fundingGoal)
-		{
+	function CloseCrowdSale(uint256 _maximumBuyBackAmountInCents) internal {
+		if (amountRaisedEth >= fundingGoal) {
 			fundingGoalReached = true;																// Checks if the funding goal is reached
 			GoalReached(beneficiary, amountRaisedEth);
 		}
+		
 		crowdsaleClosed = true;																		// Close the crowdsale
 		maximumBuyBackPriceInCents = _maximumBuyBackAmountInCents;            						// Calculates the maximum buy back price
 		totalSupply = _currentSupply;
@@ -378,95 +343,85 @@ contract ICOToken is token
 	}
 }
 
-contract GAP is ICOToken
-{	
+contract GAP is ICOToken {	
 	// Public variables
-	string public maximumBuyBack = "Token 0.05 ETH per Token";										// Max price in ETH for buy back
-	uint256 public KilledTillNow;
+	string public constant maximumBuyBack = "Token 0.05 ETH per Token";										// Max price in ETH for buy back
+	uint256 public killedTillNow;
 	uint256 public sellPrice;
 	uint256 public mustToSellCourses;
 	uint public depositsTillNow;
 	uint public actualPriceInCents;
-	address public Killer;	
+	address public killer;	
 	
 	event FundTransfer(address backer, uint amount, bool isContribution);
 	
-	function GAP() ICOToken()
-	{
-		Killer = 0;
-		KilledTillNow = 0;
+	function GAP() ICOToken() {
+		killer = 0;
+		killedTillNow = 0;
 		sellPrice = 0;
 		mustToSellCourses = 0;
 		depositsTillNow = 0;
 	}
 	
 	// The contributers can check the actual price in wei before selling 
-	function checkActualPrice() returns (uint256 _sellPrice)
-	{
+	function checkActualPrice() returns (uint256 _sellPrice) {
 		return sellPrice;
 	}
 				
 	// End the crowdsale and start buying back			
 	// Only owner can execute this function			
-	function BuyBackStart(uint256 actualSellPriceInWei, uint256 _mustToSellCourses, uint256 maxBuyBackPriceCents) onlyOwner			
-	{																	
+	function BuyBackStart(uint256 actualSellPriceInWei, uint256 _mustToSellCourses, uint256 maxBuyBackPriceCents) onlyOwner	{																	
 		CloseCrowdSale(maxBuyBackPriceCents);															
 		sellPrice = actualSellPriceInWei;
 		mustToSellCourses = _mustToSellCourses;
 	}			
 	
-	function deposit (uint _deposits, uint256 actualSellPriceInWei, uint _actualPriceInCents) onlyOwner payable												
-	{
+	function deposit (uint _deposits, uint256 actualSellPriceInWei, uint _actualPriceInCents) onlyOwner payable	{
 		assert(_deposits < 100);																	// Check if the deposits are less than 10	
 		depositsTillNow = depositsTillNow.plus(_deposits);          								// Increase the deposit counter
 		assert(mustToSellCourses > 0);
-		if(mustToSellCourses < _deposits)
-		{
+		if(mustToSellCourses < _deposits) {
 			_deposits = mustToSellCourses;		
 		}
+		
 		mustToSellCourses = mustToSellCourses.minus(_deposits);										// Calculate the remaining amount of courses to sell					
 		sellPrice = actualSellPriceInWei;
 		actualPriceInCents = _actualPriceInCents;
 	}	
 				
-	function sell(uint256 amount) onlyContributer returns (uint256 revenue)			
-	{	
+	function sell(uint256 amount) onlyContributer returns (uint256 revenue)	{	
 	    require(this.balance >= amount * sellPrice);                                                 // checks if the contract has enough ether to buy
 		revenue = amount.multiply(sellPrice);														// The revenue you receive when you sell your tokens
 		amount = amount.multiply(10 ** 18);
 		balanceOf[msg.sender] = balanceOf[msg.sender].minus(amount);                   				// Subtracts the amount from seller's balance
-		balanceOf[Killer] = balanceOf[Killer].plus(amount);                         				// Adds the amount to owner's balance
+		balanceOf[killer] = balanceOf[killer].plus(amount);                         				// Adds the amount to owner's balance
 		KilledTokens[msg.sender] = KilledTokens[msg.sender].plus(amount);							// Calculates the killed tokens of the contibuter
-		KilledTillNow = KilledTillNow.plus(amount);													// Calculates all the killed tokens until now
+		killedTillNow = killedTillNow.plus(amount);													// Calculates all the killed tokens until now
 			
 		msg.sender.transfer(revenue);															// Sends ether to the seller: it's important // To do this last to prevent recursion attacks
 		
-		Transfer(msg.sender, Killer, amount);             											// Executes an event reflecting on the change
+		Transfer(msg.sender, killer, amount);             											// Executes an event reflecting on the change
 		return revenue;                                 											// Ends function and returns the revenue	
 	}
 	
-	function ownerWithdrawal(uint256 amountInWei, address _to) onlyOwner
-	{						
+	function ownerWithdrawal(uint256 amountInWei, address _to) onlyOwner {						
 		uint256 _value = amountInWei;						
 		_to.transfer(_value);						
 	}
 	
-	function safeWithdrawal() afterDeadline 			
-	{			
-		if (!fundingGoalReached) 			
-		{			
+	function safeWithdrawal() afterDeadline {			
+		if (!fundingGoalReached) {			
 			uint256 tokensAmount = balanceOf[msg.sender];
 			uint256 amountForReturn = contrubutedAmount[msg.sender];
 			balanceOf[msg.sender] = 0;
-			KilledTillNow = KilledTillNow.plus(tokensAmount);
+			killedTillNow = killedTillNow.plus(tokensAmount);
 			KilledTokens[msg.sender] = KilledTokens[msg.sender].plus(tokensAmount);
 			require(tokensAmount > 0);
 			contrubutedAmount[msg.sender] = contrubutedAmount[msg.sender].minus(amountForReturn);
             msg.sender.transfer(amountForReturn);
 		}
 		
-		if(fundingGoalReached && beneficiary == msg.sender)
-		{
+		if(fundingGoalReached && beneficiary == msg.sender) {
 			require(fundingGoalReached && beneficiary == msg.sender);
 			beneficiary.transfer(amountRaisedEth); 
 		}
